@@ -1,0 +1,64 @@
+API Error: PayloadTooLargeError: request entity too large
+    at readStream (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:163:17)
+    at getRawBody (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:116:12)
+    at read (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\read.js:113:3)
+    at jsonParser (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\types\json.js:88:5)
+    at Layer.handleRequest (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:342:13)
+    at D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:297:9
+    at processParams (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:582:12)
+    at next (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:291:5)
+    at cors (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\cors\lib\index.js:188:7) {
+  expected: 2031627,
+  length: 2031627,
+  limit: 102400,
+  type: 'entity.too.large'
+}
+API Error: PayloadTooLargeError: request entity too large
+    at readStream (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:163:17)
+    at getRawBody (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:116:12)
+    at read (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\read.js:113:3)
+    at jsonParser (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\types\json.js:88:5)
+    at Layer.handleRequest (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:342:13)
+    at D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:297:9
+    at processParams (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:582:12)
+    at next (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:291:5)
+    at cors (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\cors\lib\index.js:188:7) {
+  expected: 2031627,
+  length: 2031627,
+  limit: 102400,
+  type: 'entity.too.large'
+}
+API Error: PayloadTooLargeError: request entity too large
+    at readStream (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:163:17)
+    at getRawBody (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:116:12)
+    at read (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\read.js:113:3)
+    at jsonParser (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\types\json.js:88:5)
+    at Layer.handleRequest (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:342:13)
+    at D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:297:9
+    at processParams (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:582:12)
+    at next (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:291:5)
+    at cors (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\cors\lib\index.js:188:7) {
+  expected: 2031627,
+  length: 2031627,
+  limit: 102400,
+  type: 'entity.too.large'
+}
+API Error: PayloadTooLargeError: request entity too large
+    at readStream (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:163:17)
+    at getRawBody (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\raw-body\index.js:116:12)
+    at read (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\read.js:113:3)
+    at jsonParser (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\body-parser\lib\types\json.js:88:5)
+    at Layer.handleRequest (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:342:13)
+    at D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:297:9
+    at processParams (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:582:12)
+    at next (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\router\index.js:291:5)
+    at cors (D:\KULIAH\SEMESTER 6\Software Dev\Project1\backend\node_modules\cors\lib\index.js:188:7) {
+  expected: 2031627,
+  length: 2031627,
+  limit: 102400,
+  type: 'entity.too.large'
+}
