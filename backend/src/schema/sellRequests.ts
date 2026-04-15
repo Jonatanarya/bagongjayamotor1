@@ -11,6 +11,11 @@ export const sellRequests = pgTable("sell_requests", {
   hargaPenawaran: bigint("harga_penawaran", { mode: "number" }).notNull(),
   deskripsi: text("deskripsi"),
   imageUrl: text("image_url"),
+  fotoDepan: text("foto_depan"),
+  fotoBelakang: text("foto_belakang"),
+  fotoSampingKiri: text("foto_samping_kiri"),
+  fotoSampingKanan: text("foto_samping_kanan"),
+  fotoSTNKBPKB: text("foto_stnk_bpkb"),
   status: varchar("status", { length: 50 }).default("Pending"), // Pending | Contacted | Rejected | Accepted
   createdByAdminId: text("created_by_admin_id"),
   createdAt: timestamp("created_at").defaultNow(),

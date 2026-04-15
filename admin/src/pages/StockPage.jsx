@@ -13,6 +13,10 @@ const emptyForm = {
   kilometer: '',
   status: 'Tersedia',
   imageUrl: '',
+  fotoDepan: '',
+  fotoBelakang: '',
+  fotoSampingKiri: '',
+  fotoSampingKanan: '',
 };
 
 const formatRp = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
@@ -26,6 +30,7 @@ function StockPage() {
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [deleteItem, setDeleteItem] = useState(null);
+  const [fotoPreviews, setFotoPreviews] = useState({ depan: null, belakang: null, sampingKiri: null, sampingKanan: null });
 
   const { data: motors = [], isLoading, error } = useQuery({
     queryKey: ['motors', search, filterStatus],
@@ -91,6 +96,7 @@ function StockPage() {
   const openAdd = () => {
     setEditItem(null);
     setForm(emptyForm);
+    setFotoPreviews({ depan: null, belakang: null, sampingKiri: null, sampingKanan: null });
     setModalOpen(true);
   };
 
@@ -104,8 +110,67 @@ function StockPage() {
       kilometer: String(item.kilometer ?? ''),
       status: item.status ?? 'Tersedia',
       imageUrl: item.imageUrl ?? '',
+      fotoDepan: item.fotoDepan ?? '',
+      fotoBelakang: item.fotoBelakang ?? '',
+      fotoSampingKiri: item.fotoSampingKiri ?? '',
+      fotoSampingKanan: item.fotoSampingKanan ?? '',
+    });
+    setFotoPreviews({
+      depan: item.fotoDepan ?? null,
+      belakang: item.fotoBelakang ?? null,
+      sampingKiri: item.fotoSampingKiri ?? null,
+      sampingKanan: item.fotoSampingKanan ?? null,
     });
     setModalOpen(true);
+  };
+
+  const compressImage = (file, maxWidth = 1200, quality = 0.7) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e, photoType) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Ukuran file maksimal 5MB');
+      return;
+    }
+
+    const compressed = await compressImage(file);
+    setFotoPreviews((prev) => ({ ...prev, [photoType]: compressed }));
+    setForm((prev) => {
+      const photoFieldMap = {
+        depan: 'fotoDepan',
+        belakang: 'fotoBelakang',
+        sampingKiri: 'fotoSampingKiri',
+        sampingKanan: 'fotoSampingKanan',
+      };
+      return { ...prev, [photoFieldMap[photoType]]: compressed };
+    });
   };
 
   const handleSave = async () => {
@@ -119,6 +184,10 @@ function StockPage() {
       kilometer: form.kilometer ? Number(form.kilometer) : null,
       status: form.status,
       imageUrl: form.imageUrl.trim() || null,
+      fotoDepan: form.fotoDepan.trim() || null,
+      fotoBelakang: form.fotoBelakang.trim() || null,
+      fotoSampingKiri: form.fotoSampingKiri.trim() || null,
+      fotoSampingKanan: form.fotoSampingKanan.trim() || null,
     });
   };
 
@@ -284,7 +353,11 @@ function StockPage() {
                 { label: 'Tahun', name: 'tahun', placeholder: '2022', type: 'number' },
                 { label: 'Harga', name: 'harga', placeholder: '58000000', type: 'number' },
                 { label: 'Kilometer', name: 'kilometer', placeholder: '5000', type: 'number' },
-                { label: 'URL Foto', name: 'imageUrl', placeholder: 'https://...' },
+                { label: 'Foto Utama (URL)', name: 'imageUrl', placeholder: 'https://...' },
+                { label: 'Foto Tampak Depan (URL)', name: 'fotoDepan', placeholder: 'https://...' },
+                { label: 'Foto Tampak Belakang (URL)', name: 'fotoBelakang', placeholder: 'https://...' },
+                { label: 'Foto Tampak Samping Kiri (URL)', name: 'fotoSampingKiri', placeholder: 'https://...' },
+                { label: 'Foto Tampak Samping Kanan (URL)', name: 'fotoSampingKanan', placeholder: 'https://...' },
               ].map((field) => (
                 <div key={field.name}>
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
@@ -309,6 +382,46 @@ function StockPage() {
                   <option value="Tersedia">Tersedia</option>
                   <option value="Terjual">Terjual</option>
                 </select>
+              </div>
+
+              {/* Motor Photos Preview Grid */}
+              <div className="border-t border-white/10 pt-4 mt-4">
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Foto-Foto Motor</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { key: 'depan', label: 'Tampak Depan', icon: 'image_search' },
+                    { key: 'belakang', label: 'Tampak Belakang', icon: 'image_search' },
+                    { key: 'sampingKiri', label: 'Samping Kiri', icon: 'image_search' },
+                    { key: 'sampingKanan', label: 'Samping Kanan', icon: 'image_search' },
+                  ].map(({ key, label, icon }) => (
+                    <div key={key}>
+                      <p className="text-xs text-slate-400 mb-2 font-medium">{label}</p>
+                      <div
+                        onClick={() => document.getElementById(`file-${key}`).click()}
+                        className="border-2 border-dashed border-white/10 rounded-lg p-2 cursor-pointer hover:border-orange-500/50 hover:bg-orange-500/5 transition-all text-center"
+                      >
+                        {fotoPreviews[key] ? (
+                          <div className="relative">
+                            <img src={fotoPreviews[key]} alt={label} className="w-full h-20 object-cover rounded" />
+                            <p className="text-xs text-slate-400 mt-1">Klik untuk ubah</p>
+                          </div>
+                        ) : (
+                          <div className="py-3">
+                            <span className="material-symbols-outlined text-lg text-slate-500 block">{icon}</span>
+                            <p className="text-xs text-slate-500 mt-1">Upload</p>
+                          </div>
+                        )}
+                        <input
+                          id={`file-${key}`}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileChange(e, key)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             {saveMutation.error && (

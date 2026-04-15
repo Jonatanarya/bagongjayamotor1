@@ -4,9 +4,9 @@ import { requestService } from '../../services/requestService.js';
 
 function SellMotorPage() {
   const [form, setForm] = useState({ nama: '', wa: '', alamat: '', merk: '', tipe: '', tahun: '', kilometer: '', harga: '', deskripsi: '' });
-  const [preview, setPreview] = useState(null);
+  const [previews, setPreviews] = useState({ depan: null, belakang: null, sampingKiri: null, sampingKanan: null, stnkBpkb: null });
   const [submitted, setSubmitted] = useState(false);
-  const [dragging, setDragging] = useState(false);
+  const [draggingField, setDraggingField] = useState(null);
 
   const submitRequest = useMutation({
     mutationFn: requestService.submitSellRequest,
@@ -27,22 +27,22 @@ function SellMotorPage() {
     setForm((current) => ({ ...current, [name]: value }));
   };
 
-  const handleFile = (file) => {
+  const handleFile = (file, fieldName) => {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
       alert('Ukuran foto maksimal 2MB');
       return;
     }
     const reader = new FileReader();
-    reader.onload = (e) => setPreview(e.target.result);
+    reader.onload = (e) => setPreviews((current) => ({ ...current, [fieldName]: e.target.result }));
     reader.readAsDataURL(file);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e, fieldName) => {
     e.preventDefault();
-    setDragging(false);
+    setDraggingField(null);
     const file = e.dataTransfer.files[0];
-    handleFile(file);
+    handleFile(file, fieldName);
   };
 
   const handleSubmit = (e) => {
@@ -52,7 +52,12 @@ function SellMotorPage() {
       ...form,
       tahun: Number(form.tahun),
       hargaPenawaran: Number(form.harga.replace(/\D/g, '') || 0),
-      imageUrl: preview,
+      imageUrl: previews.depan,
+      fotoDepan: previews.depan,
+      fotoBelakang: previews.belakang,
+      fotoSampingKiri: previews.sampingKiri,
+      fotoSampingKanan: previews.sampingKanan,
+      fotoSTNKBPKB: previews.stnkBpkb,
     });
   };
 
@@ -67,7 +72,7 @@ function SellMotorPage() {
             onClick={() => {
               setSubmitted(false);
               setForm({ nama: '', wa: '', alamat: '', merk: '', tipe: '', tahun: '', kilometer: '', harga: '', deskripsi: '' });
-              setPreview(null);
+              setPreviews({ depan: null, belakang: null, sampingKiri: null, sampingKanan: null, stnkBpkb: null });
             }}
             className="cursor-pointer px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-all"
           >
@@ -80,6 +85,14 @@ function SellMotorPage() {
 
   const inputClass = 'w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:bg-white/8 transition-all duration-200';
   const labelClass = 'block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2';
+
+  const photoFields = [
+    { key: 'depan', label: 'Tampak Depan', icon: 'image_search' },
+    { key: 'belakang', label: 'Tampak Belakang', icon: 'image_search' },
+    { key: 'sampingKiri', label: 'Tampak Samping Kiri', icon: 'image_search' },
+    { key: 'sampingKanan', label: 'Tampak Samping Kanan', icon: 'image_search' },
+    { key: 'stnkBpkb', label: 'Surat STNK + BPKB', icon: 'description' },
+  ];
 
   return (
     <div className="px-8 lg:px-20 py-16">
@@ -145,31 +158,47 @@ function SellMotorPage() {
               <textarea className={`${inputClass} resize-none`} name="deskripsi" placeholder="Kondisi mesin, kelengkapan surat, riwayat servis..." rows={4} value={form.deskripsi} onChange={handleChange} />
             </div>
 
-            <div>
-              <label className={labelClass}>Foto Motor (Preview Lokal)</label>
-              <div
-                className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${dragging ? 'border-orange-500 bg-orange-500/5' : 'border-white/10 hover:border-orange-500/50 hover:bg-white/3'}`}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragging(true);
-                }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={handleDrop}
-                onClick={() => document.getElementById('file-upload').click()}
-              >
-                {preview ? (
-                  <div className="relative">
-                    <img src={preview} alt="Preview" className="max-h-48 mx-auto rounded-xl object-cover" />
-                    <p className="text-slate-400 text-xs mt-3">Klik untuk ganti foto</p>
+            {/* Photo Upload Section */}
+            <div className="border-t border-white/5 pt-6">
+              <label className={labelClass}>Foto-Foto Motor * (5 Foto Diperlukan)</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {photoFields.map(({ key, label, icon }) => (
+                  <div key={key}>
+                    <label className="block text-xs font-semibold text-slate-300 mb-2">{label}</label>
+                    <div
+                      className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${draggingField === key ? 'border-orange-500 bg-orange-500/5' : 'border-white/10 hover:border-orange-500/50 hover:bg-white/3'}`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDraggingField(key);
+                      }}
+                      onDragLeave={() => setDraggingField(null)}
+                      onDrop={(e) => handleDrop(e, key)}
+                      onClick={() => document.getElementById(`file-${key}`).click()}
+                    >
+                      {previews[key] ? (
+                        <div className="relative">
+                          <img src={previews[key]} alt={label} className="w-full h-32 object-cover rounded-lg" />
+                          <p className="text-slate-400 text-xs mt-2">Klik untuk ganti</p>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-3xl text-slate-500 block mb-2">
+                            {icon}
+                          </span>
+                          <p className="text-slate-400 font-medium text-sm">Upload Foto</p>
+                          <p className="text-slate-600 text-xs mt-1">Maks 2MB</p>
+                        </>
+                      )}
+                      <input
+                        id={`file-${key}`}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleFile(e.target.files[0], key)}
+                      />
+                    </div>
                   </div>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-4xl text-slate-500 block mb-3">add_photo_alternate</span>
-                    <p className="text-slate-400 font-medium">Klik atau drag foto motor ke sini</p>
-                    <p className="text-slate-600 text-xs mt-1">PNG, JPG, WEBP - Maks. 2MB</p>
-                  </>
-                )}
-                <input id="file-upload" type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+                ))}
               </div>
             </div>
 

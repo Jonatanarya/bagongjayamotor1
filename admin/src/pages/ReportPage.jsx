@@ -46,12 +46,22 @@ function ReportPage() {
 
   const reportData = transactions.map((item) => {
     const dateValue = new Date(item.date);
+    const motorRecord = motors.find((motor) => motor.id === item.motorId);
+    const costPrice = motorRecord?.harga ?? 0;
+    const salePrice = item.type === 'Jual' ? Number(item.amount || 0) : '';
+    const buyPrice = item.type === 'Beli' ? Number(item.amount || 0) : item.type === 'Jual' ? costPrice : '';
+    const profit = item.type === 'Jual' ? Number(item.amount || 0) - costPrice : '';
+
     return {
       ...item,
       month: String(dateValue.getMonth() + 1).padStart(2, '0'),
       year: String(dateValue.getFullYear()),
       client: item.clientName,
       motor: getMotorLabel(item.motorId),
+      costPrice,
+      sellPrice: salePrice,
+      buyPrice,
+      rowProfit: profit,
     };
   });
 
@@ -60,13 +70,87 @@ function ReportPage() {
   );
 
   const filtered = reportData.filter((item) => item.month === month && item.year === year);
-  const totalJual = filtered.filter((item) => item.type === 'Jual').reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const totalBeli = filtered.filter((item) => item.type === 'Beli').reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const saleTransactions = filtered.filter((item) => item.type === 'Jual');
+  const purchaseTransactions = filtered.filter((item) => item.type === 'Beli');
+  const totalJual = saleTransactions.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const totalBeli = purchaseTransactions.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const selisih = totalJual - totalBeli;
 
+  const formatOptionalRp = (value) => {
+    if (value === '' || value === null || value === undefined) return '-';
+    return formatRp(value);
+  };
+
+  const renderTransactionsTable = (title, data, showProfit) => (
+    <div className="bg-slate-800/60 border border-white/5 rounded-2xl overflow-hidden">
+      <div className="px-6 py-5 border-b border-white/5 bg-slate-900/70">
+        <h3 className="text-white font-semibold">{title}</h3>
+        <p className="text-slate-400 text-sm mt-1">{data.length} transaksi untuk periode ini</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-slate-900/50 border-b border-white/5">
+              {['ID', 'Tanggal', 'Klien', 'Motor', 'Harga Beli', 'Harga Jual', ...(showProfit ? ['Profit'] : [])].map((heading) => (
+                <th key={heading} className="px-6 py-4 text-left text-slate-400 font-bold uppercase tracking-widest text-xs">
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {isLoading && (
+              <tr>
+                <td colSpan={showProfit ? 7 : 6} className="text-center py-12 text-slate-500">
+                  Memuat data laporan...
+                </td>
+              </tr>
+            )}
+
+            {!isLoading && data.length === 0 && (
+              <tr>
+                <td colSpan={showProfit ? 7 : 6} className="text-center py-12 text-slate-500">
+                  Tidak ada transaksi di sini
+                </td>
+              </tr>
+            )}
+
+            {!isLoading &&
+              data.map((item) => (
+                <tr key={item.id} className="hover:bg-white/3 transition-colors">
+                  <td className="px-6 py-4 text-slate-400 font-mono text-xs">{item.id}</td>
+                  <td className="px-6 py-4 text-slate-300">{item.date}</td>
+                  <td className="px-6 py-4 text-white font-medium">{item.client}</td>
+                  <td className="px-6 py-4 text-slate-300">{item.motor}</td>
+                  <td className="px-6 py-4 text-slate-200">{formatOptionalRp(item.buyPrice)}</td>
+                  <td className="px-6 py-4 text-slate-200">{formatOptionalRp(item.sellPrice)}</td>
+                  {showProfit && (
+                    <td className={`px-6 py-4 font-bold ${item.rowProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {item.rowProfit === '' ? '-' : formatRp(item.rowProfit)}
+                    </td>
+                  )}
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   const handleExport = () => {
-    const header = 'ID,Tipe,Tanggal,Klien,Motor,Nominal\n';
-    const rows = filtered.map((item) => `${item.id},${item.type},${item.date},${item.client},${item.motor},${item.amount}`).join('\n');
+    const header = 'ID,Tipe,Tanggal,Klien,Motor,Harga Beli,Harga Jual,Profit\n';
+    const rows = filtered
+      .map((item) => [
+        item.id,
+        item.type,
+        item.date,
+        item.client,
+        item.motor,
+        item.buyPrice !== '' ? item.buyPrice : '',
+        item.sellPrice !== '' ? item.sellPrice : '',
+        item.rowProfit !== '' ? item.rowProfit : '',
+      ].join(','))
+      .join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -142,7 +226,7 @@ function ReportPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-900/50 border-b border-white/5">
-                {['ID', 'Tipe', 'Tanggal', 'Klien', 'Motor', 'Nominal'].map((heading) => (
+                {['ID', 'Tipe', 'Tanggal', 'Klien', 'Motor', 'Harga Beli', 'Harga Jual', 'Profit'].map((heading) => (
                   <th key={heading} className="px-6 py-4 text-left text-slate-400 font-bold uppercase tracking-widest text-xs">
                     {heading}
                   </th>
@@ -152,7 +236,7 @@ function ReportPage() {
             <tbody className="divide-y divide-white/5">
               {isLoading && (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-500">
+                  <td colSpan={8} className="text-center py-12 text-slate-500">
                     Memuat data laporan...
                   </td>
                 </tr>
@@ -160,7 +244,7 @@ function ReportPage() {
 
               {!isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-500">
+                  <td colSpan={8} className="text-center py-12 text-slate-500">
                     Tidak ada data untuk periode ini
                   </td>
                 </tr>
@@ -182,7 +266,11 @@ function ReportPage() {
                     <td className="px-6 py-4 text-slate-300">{item.date}</td>
                     <td className="px-6 py-4 text-white font-medium">{item.client}</td>
                     <td className="px-6 py-4 text-slate-300">{item.motor}</td>
-                    <td className="px-6 py-4 text-orange-400 font-bold">{formatRp(item.amount)}</td>
+                    <td className="px-6 py-4 text-slate-200">{formatOptionalRp(item.buyPrice)}</td>
+                    <td className="px-6 py-4 text-slate-200">{formatOptionalRp(item.sellPrice)}</td>
+                    <td className={`px-6 py-4 font-bold ${item.rowProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {item.rowProfit === '' ? '-' : formatRp(item.rowProfit)}
+                    </td>
                   </tr>
                 ))}
             </tbody>

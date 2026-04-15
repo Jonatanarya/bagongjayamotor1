@@ -30,6 +30,11 @@ router.post('/', async (req, res, next) => {
       hargaPenawaran: Number(req.body?.hargaPenawaran || 0),
       deskripsi: req.body?.deskripsi || null,
       imageUrl: req.body?.imageUrl || null,
+      fotoDepan: req.body?.fotoDepan || null,
+      fotoBelakang: req.body?.fotoBelakang || null,
+      fotoSampingKiri: req.body?.fotoSampingKiri || null,
+      fotoSampingKanan: req.body?.fotoSampingKanan || null,
+      fotoSTNKBPKB: req.body?.fotoSTNKBPKB || null,
       status: 'Pending',
     } as const;
 

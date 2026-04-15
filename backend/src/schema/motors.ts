@@ -11,6 +11,10 @@ export const motors = pgTable(
     kilometer: integer("kilometer"), // NEW FIELD
     status: varchar("status", { length: 50 }).default("Tersedia"), // Tersedia | Terjual
     imageUrl: text("image_url"),
+    fotoDepan: text("foto_depan"),
+    fotoBelakang: text("foto_belakang"),
+    fotoSampingKiri: text("foto_samping_kiri"),
+    fotoSampingKanan: text("foto_samping_kanan"),
     deskripsi: text("deskripsi"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
