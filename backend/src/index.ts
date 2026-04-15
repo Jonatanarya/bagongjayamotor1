@@ -42,11 +42,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
-import suggestionRoutes from './routes/suggestion.routes';
+import suggestionRoutes from './routes/suggestion.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-import motorRoutes from './routes/motor.routes.ts';
-import transactionRoutes from './routes/transaction.routes.ts';
-import requestRoutes from './routes/request.routes.ts';
+import motorRoutes from './routes/motor.routes.js';
+import transactionRoutes from './routes/transaction.routes.js';
+import requestRoutes from './routes/request.routes.js';
 
 // API Routes
 app.get('/api', (req, res) => {
