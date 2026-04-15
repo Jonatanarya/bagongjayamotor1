@@ -30,7 +30,10 @@ deploy_backend() {
   npm run build
   
   log "📦 Pushing database schema..."
-  npm run db:push 2>/dev/null || warn "db:push failed (schema might already be up to date)"
+  npm run db:push || warn "db:push failed — pastikan DATABASE_URL di .env sudah benar!"
+
+  log "🌱 Seeding data awal..."
+  npm run db:seed || warn "db:seed gagal — mungkin data sudah ada (normal jika re-deploy)"
 
   log "🔄 Restarting backend with PM2..."
   if pm2 describe bagong-api > /dev/null 2>&1; then
@@ -48,8 +51,8 @@ deploy_frontend() {
   cd "$PROJECT_DIR/frontend"
 
   if [ ! -f .env.production ]; then
-    warn ".env.production not found. Creating with default API URL..."
-    echo 'VITE_API_BASE_URL=https://api.yourdomain.com/api' > .env.production
+    warn ".env.production not found. Creating with production API URL..."
+    echo 'VITE_API_BASE_URL=https://api.bagongjayamotor.com/api' > .env.production
     warn "⚠️  Edit frontend/.env.production with your actual API domain!"
   fi
 
@@ -63,8 +66,8 @@ deploy_admin() {
   cd "$PROJECT_DIR/admin"
 
   if [ ! -f .env.production ]; then
-    warn ".env.production not found. Creating with default API URL..."
-    echo 'VITE_API_BASE_URL=https://api.yourdomain.com/api' > .env.production
+    warn ".env.production not found. Creating with production API URL..."
+    echo 'VITE_API_BASE_URL=https://api.bagongjayamotor.com/api' > .env.production
     warn "⚠️  Edit admin/.env.production with your actual API domain!"
   fi
 

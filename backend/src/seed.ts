@@ -11,15 +11,13 @@ import bcrypt from 'bcrypt';
 
 dotenv.config();
 
-// Database connection
+// Database connection — pakai DATABASE_URL dari .env saja
 const connectionString = process.env.DATABASE_URL!;
-const client = postgres(connectionString, {
-  user: 'postgres',
-  password: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  database: 'bagong_jaya_motor',
-});
+if (!connectionString) {
+  console.error('❌ DATABASE_URL tidak ditemukan di .env!');
+  process.exit(1);
+}
+const client = postgres(connectionString);
 const db = drizzle(client);
 
 async function seed() {
