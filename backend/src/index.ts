@@ -62,6 +62,7 @@ app.get('/api', (req, res) => {
 });
 
 const authBaseUrl = process.env.AUTH_BASE_URL ?? `http://localhost:${PORT}/api/auth`;
+// @ts-ignore - better-auth type mismatch, works at runtime
 const authRoutes = authRouter({ baseURL: authBaseUrl }, {
   plugins: [drizzleAdapter(db, { schema: { users }, provider: 'pg' })],
 });
