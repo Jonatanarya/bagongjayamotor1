@@ -9,6 +9,12 @@ const createEmptyForm = () => ({
   clientName: '',
   clientWa: '',
   motorId: '',
+  // Field khusus tipe Beli — motor baru yang belum ada di stok
+  isNewMotor: false,
+  newMotorMerk: '',
+  newMotorTipe: '',
+  newMotorWarna: '',
+  newMotorTahun: '',
   amount: '',
   notes: '',
 });
@@ -34,7 +40,7 @@ function TransactionPage() {
   const { data: motors = [] } = useQuery({
     queryKey: ['motors', 'transaction-options'],
     queryFn: async () => {
-      const response = await apiClient.get('/motors?limit=100');
+      const response = await apiClient.get('/motors?limit=200');
       return response?.data?.motors ?? [];
     },
   });
@@ -44,10 +50,12 @@ function TransactionPage() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+        queryClient.invalidateQueries({ queryKey: ['motors'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
       setModalOpen(false);
       setForm(createEmptyForm());
+      setFormErrors({});
     },
   });
 
@@ -62,22 +70,49 @@ function TransactionPage() {
     },
   });
 
+  const [formErrors, setFormErrors] = useState({});
+
   const getMotorLabel = (motorId) => {
     const motor = motors.find((item) => item.id === motorId);
-    return motor ? `${motor.merk} ${motor.tipe}` : motorId || '-';
+    if (!motor) return motorId || '-';
+    const warnaText = motor.warna ? ` - ${motor.warna}` : '';
+    return `${motor.merk} ${motor.tipe} ${motor.tahun}${warnaText}`;
   };
 
+  // Motor tersedia = Tersedia untuk transaksi Jual; semua motor untuk referensi Beli
+  const availableMotors = form.type === 'Jual'
+    ? motors.filter((m) => m.status === 'Tersedia')
+    : motors;
+
   const handleAdd = async () => {
-    if (!form.date || !form.clientName || !form.motorId || !form.amount) return;
+    const errors = {};
+    if (!form.date) errors.date = 'Tanggal wajib diisi';
+    if (!form.clientName.trim()) errors.clientName = form.type === 'Jual' ? 'Nama pembeli wajib diisi' : 'Nama penjual wajib diisi';
+    if (!form.amount) errors.amount = 'Nominal wajib diisi';
+    // Validasi motor: jika Jual, wajib pilih motor di stok; jika Beli+newMotor, wajib isi merk+tipe
+    if (form.type === 'Jual' && !form.motorId) errors.motorId = 'Pilih motor yang dijual';
+    if (form.type === 'Beli' && !form.isNewMotor && !form.motorId) errors.motorId = 'Pilih motor atau centang "Motor Baru"';
+    if (form.type === 'Beli' && form.isNewMotor && !form.newMotorMerk.trim()) errors.newMotorMerk = 'Merk wajib diisi';
+    if (form.type === 'Beli' && form.isNewMotor && !form.newMotorTipe.trim()) errors.newMotorTipe = 'Tipe wajib diisi';
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    setFormErrors({});
+
+    const motorNotes = form.isNewMotor && form.type === 'Beli'
+      ? `[Motor Baru: ${form.newMotorMerk.trim()} ${form.newMotorTipe.trim()}${form.newMotorWarna ? ' - ' + form.newMotorWarna : ''}${form.newMotorTahun ? ' (' + form.newMotorTahun + ')' : ''}]`
+      : null;
 
     await createMutation.mutateAsync({
       type: form.type,
       date: form.date,
       clientName: form.clientName.trim(),
       clientWa: form.clientWa.trim() || null,
-      motorId: form.motorId,
+      motorId: form.isNewMotor ? null : (form.motorId || null),
       amount: Number(form.amount),
-      notes: form.notes.trim() || null,
+      notes: [motorNotes, form.notes.trim()].filter(Boolean).join(' | ') || null,
     });
   };
 
@@ -215,7 +250,9 @@ function TransactionPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
           <div className="relative z-10 bg-slate-900 border border-white/10 rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-            <h3 className="text-white font-bold text-xl mb-6">Tambah Transaksi</h3>
+            <h3 className="text-white font-bold text-xl mb-6">
+              {form.type === 'Jual' ? 'Tambah Transaksi Jual' : 'Tambah Transaksi Beli'}
+            </h3>
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Tipe</label>
@@ -250,13 +287,16 @@ function TransactionPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Nama Klien</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                  {form.type === 'Jual' ? 'Nama Pembeli' : 'Nama Penjual'}
+                </label>
                 <input
-                  className={inputClass}
-                  placeholder="Nama lengkap..."
+                  className={`${inputClass}${formErrors.clientName ? ' border-red-500' : ''}`}
+                  placeholder={form.type === 'Jual' ? 'Nama lengkap pembeli...' : 'Nama lengkap penjual...'}
                   value={form.clientName}
                   onChange={(event) => setForm((previous) => ({ ...previous, clientName: event.target.value }))}
                 />
+                {formErrors.clientName && <p className="text-xs text-red-400 mt-1">{formErrors.clientName}</p>}
               </div>
 
               <div>
@@ -269,31 +309,92 @@ function TransactionPage() {
                 />
               </div>
 
+              {/* Motor selector — adaptif berdasarkan tipe transaksi */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Motor</label>
-                <select
-                  className={inputClass}
-                  value={form.motorId}
-                  onChange={(event) => setForm((previous) => ({ ...previous, motorId: event.target.value }))}
-                >
-                  <option value="">Pilih motor</option>
-                  {motors.map((motor) => (
-                    <option key={motor.id} value={motor.id}>
-                      {motor.merk} {motor.tipe} ({motor.id})
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-400">
+                    {form.type === 'Jual' ? 'Motor Dijual' : 'Motor Dibeli'}
+                  </label>
+                  {form.type === 'Beli' && (
+                    <label className="flex items-center gap-1.5 text-xs text-blue-400 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.isNewMotor}
+                        onChange={(e) => setForm((prev) => ({ ...prev, isNewMotor: e.target.checked, motorId: '' }))}
+                        className="accent-blue-500"
+                      />
+                      Motor Baru (belum di stok)
+                    </label>
+                  )}
+                </div>
+
+                {form.isNewMotor && form.type === 'Beli' ? (
+                  <div className="space-y-3 bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                    <p className="text-xs text-blue-400">Isi detail motor yang akan dibeli dan ditambahkan ke stok:</p>
+                    <input
+                      className={`${inputClass}${formErrors.newMotorMerk ? ' border-red-500' : ''}`}
+                      placeholder="Merk (Honda, Yamaha...)"
+                      value={form.newMotorMerk}
+                      onChange={(e) => setForm((prev) => ({ ...prev, newMotorMerk: e.target.value }))}
+                    />
+                    {formErrors.newMotorMerk && <p className="text-xs text-red-400">{formErrors.newMotorMerk}</p>}
+                    <input
+                      className={`${inputClass}${formErrors.newMotorTipe ? ' border-red-500' : ''}`}
+                      placeholder="Tipe (Vario 125, Beat...)"
+                      value={form.newMotorTipe}
+                      onChange={(e) => setForm((prev) => ({ ...prev, newMotorTipe: e.target.value }))}
+                    />
+                    {formErrors.newMotorTipe && <p className="text-xs text-red-400">{formErrors.newMotorTipe}</p>}
+                    <input
+                      className={inputClass}
+                      placeholder="Warna (Merah, Hitam...)"
+                      value={form.newMotorWarna}
+                      onChange={(e) => setForm((prev) => ({ ...prev, newMotorWarna: e.target.value }))}
+                    />
+                    <input
+                      className={inputClass}
+                      type="number"
+                      placeholder="Tahun (2020)"
+                      value={form.newMotorTahun}
+                      onChange={(e) => setForm((prev) => ({ ...prev, newMotorTahun: e.target.value }))}
+                    />
+                    <p className="text-xs text-slate-500">💡 Tambahkan motor ke halaman Stok setelah transaksi berhasil.</p>
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      className={`${inputClass}${formErrors.motorId ? ' border-red-500' : ''}`}
+                      value={form.motorId}
+                      onChange={(event) => setForm((previous) => ({ ...previous, motorId: event.target.value }))}
+                    >
+                      <option value="">Pilih motor...</option>
+                      {availableMotors.map((motor) => (
+                        <option key={motor.id} value={motor.id}>
+                          {motor.merk} {motor.tipe} {motor.tahun}{motor.warna ? ` - ${motor.warna}` : ''} ({motor.id})
+                          {motor.status === 'Terjual' ? ' [TERJUAL]' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.motorId && <p className="text-xs text-red-400 mt-1">{formErrors.motorId}</p>}
+                    {form.type === 'Jual' && availableMotors.length === 0 && (
+                      <p className="text-xs text-yellow-400 mt-1">⚠️ Tidak ada motor tersedia di stok.</p>
+                    )}
+                  </>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Nominal (Rp)</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+                  {form.type === 'Jual' ? 'Nominal Penjualan (Rp)' : 'Nominal Pembelian (Rp)'}
+                </label>
                 <input
-                  className={inputClass}
+                  className={`${inputClass}${formErrors.amount ? ' border-red-500' : ''}`}
                   type="number"
                   placeholder="50000000"
                   value={form.amount}
                   onChange={(event) => setForm((previous) => ({ ...previous, amount: event.target.value }))}
                 />
+                {formErrors.amount && <p className="text-xs text-red-400 mt-1">{formErrors.amount}</p>}
               </div>
 
               <div>

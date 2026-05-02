@@ -76,8 +76,8 @@ function DashboardPage() {
     },
     {
       label: 'Request Baru',
-      value: String(requests.length),
-      sub: 'Penawaran jual motor masuk',
+      value: String(requests.filter((r) => r.status === 'Pending').length),
+      sub: `${requests.length} total penawaran masuk`,
       icon: 'inbox',
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',

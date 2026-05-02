@@ -8,6 +8,7 @@ const DEFAULT_IMAGE =
 const emptyForm = {
   merk: '',
   tipe: '',
+  warna: '',
   tahun: '',
   harga: '',
   kilometer: '',
@@ -17,6 +18,7 @@ const emptyForm = {
   fotoBelakang: '',
   fotoSampingKiri: '',
   fotoSampingKanan: '',
+  deskripsi: '',
 };
 
 const formatRp = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
@@ -105,6 +107,7 @@ function StockPage() {
     setForm({
       merk: item.merk ?? '',
       tipe: item.tipe ?? '',
+      warna: item.warna ?? '',
       tahun: String(item.tahun ?? ''),
       harga: String(item.harga ?? ''),
       kilometer: String(item.kilometer ?? ''),
@@ -114,6 +117,7 @@ function StockPage() {
       fotoBelakang: item.fotoBelakang ?? '',
       fotoSampingKiri: item.fotoSampingKiri ?? '',
       fotoSampingKanan: item.fotoSampingKanan ?? '',
+      deskripsi: item.deskripsi ?? '',
     });
     setFotoPreviews({
       depan: item.fotoDepan ?? null,
@@ -179,6 +183,7 @@ function StockPage() {
     await saveMutation.mutateAsync({
       merk: form.merk.trim(),
       tipe: form.tipe.trim(),
+      warna: form.warna.trim() || null,
       tahun: Number(form.tahun),
       harga: parseNumber(form.harga),
       kilometer: form.kilometer ? Number(form.kilometer) : null,
@@ -188,6 +193,7 @@ function StockPage() {
       fotoBelakang: form.fotoBelakang.trim() || null,
       fotoSampingKiri: form.fotoSampingKiri.trim() || null,
       fotoSampingKanan: form.fotoSampingKanan.trim() || null,
+      deskripsi: form.deskripsi.trim() || null,
     });
   };
 
@@ -249,7 +255,7 @@ function StockPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-900/50 border-b border-white/5">
-                  {['ID', 'Motor', 'Tahun', 'Harga', 'Kilometer', 'Status', 'Aksi'].map((heading) => (
+                  {['ID', 'Motor', 'Warna', 'Tahun', 'Harga', 'Kilometer', 'Status', 'Aksi'].map((heading) => (
                     <th
                       key={heading}
                       className={`px-6 py-4 text-slate-400 font-bold uppercase tracking-widest text-xs ${
@@ -296,6 +302,7 @@ function StockPage() {
                           </div>
                         </div>
                       </td>
+                      <td className="px-6 py-4 text-slate-300">{item.warna || <span className="text-slate-600 italic text-xs">—</span>}</td>
                       <td className="px-6 py-4 text-slate-300">{item.tahun}</td>
                       <td className="px-6 py-4 text-orange-400 font-bold">{formatRp(item.harga)}</td>
                       <td className="px-6 py-4 text-slate-300">{item.kilometer ?? 0} km</td>
@@ -350,6 +357,7 @@ function StockPage() {
               {[
                 { label: 'Merk', name: 'merk', placeholder: 'Honda, Yamaha...' },
                 { label: 'Tipe', name: 'tipe', placeholder: 'CBR 250RR...' },
+                { label: 'Warna', name: 'warna', placeholder: 'Merah, Hitam, Putih...' },
                 { label: 'Tahun', name: 'tahun', placeholder: '2022', type: 'number' },
                 { label: 'Harga', name: 'harga', placeholder: '58000000', type: 'number' },
                 { label: 'Kilometer', name: 'kilometer', placeholder: '5000', type: 'number' },
@@ -422,6 +430,17 @@ function StockPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Deskripsi */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Deskripsi (Opsional)</label>
+                <textarea
+                  className={`${inputClass} min-h-20 resize-none`}
+                  placeholder="Kondisi motor, kelengkapan, catatan..."
+                  value={form.deskripsi}
+                  onChange={(event) => setForm((previous) => ({ ...previous, deskripsi: event.target.value }))}
+                />
               </div>
             </div>
             {saveMutation.error && (

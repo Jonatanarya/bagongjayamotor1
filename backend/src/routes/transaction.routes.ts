@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db } from '../config/database.js';
 import { transactions } from '../schema/transactions.js';
+import { motors } from '../schema/motors.js';
 import { desc, eq, sql } from 'drizzle-orm';
 import { generateId } from '../utils/id-generator.js';
 import { requireAdmin } from './admin.routes.js';
@@ -35,10 +36,13 @@ router.get('/summary', requireAdmin, async (_req, res, next) => {
 router.post('/', requireAdmin, async (req, res, next) => {
   try {
     const id = await generateId('TRX');
+    const type = (req.body?.type === 'Beli' ? 'Beli' : 'Jual') as 'Jual' | 'Beli';
+    const motorId = req.body?.motorId || null;
+
     const payload = {
       id,
-      type: (req.body?.type === 'Beli' ? 'Beli' : 'Jual') as 'Jual' | 'Beli',
-      motorId: req.body?.motorId || null,
+      type,
+      motorId,
       clientName: req.body?.clientName,
       clientWa: req.body?.clientWa || null,
       amount: Number(req.body?.amount || 0),
@@ -47,6 +51,12 @@ router.post('/', requireAdmin, async (req, res, next) => {
     };
 
     const [transaction] = await db.insert(transactions).values(payload).returning();
+
+    // Auto-update status motor jadi Terjual saat transaksi Jual berhasil
+    if (type === 'Jual' && motorId) {
+      await db.update(motors).set({ status: 'Terjual', updatedAt: new Date() }).where(eq(motors.id, motorId));
+    }
+
     res.status(201).json({ success: true, data: transaction });
   } catch (error) {
     next(error);
