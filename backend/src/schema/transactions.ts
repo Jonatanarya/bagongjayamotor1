@@ -1,10 +1,15 @@
-import { pgTable, text, bigint, date, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, bigint, integer, varchar, date, timestamp } from "drizzle-orm/pg-core";
 import { motors } from "./motors.js";
 
 export const transactions = pgTable("transactions", {
   id: text("id").primaryKey(), // TRX-001
   type: text("type", { enum: ["Jual", "Beli"] }).notNull(),
   motorId: text("motor_id").references(() => motors.id),
+  // Detail motor — diinput manual oleh admin
+  motorMerk: varchar("motor_merk", { length: 100 }),
+  motorTipe: varchar("motor_tipe", { length: 100 }),
+  motorWarna: varchar("motor_warna", { length: 100 }),
+  motorTahun: integer("motor_tahun"),
   clientName: text("client_name").notNull(),
   clientWa: text("client_wa"),
   amount: bigint("amount", { mode: "number" }).notNull(),
