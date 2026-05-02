@@ -8,6 +8,9 @@ const createEmptyForm = () => ({
   date: new Date().toISOString().slice(0, 10),
   clientName: '',
   clientWa: '',
+  // Untuk tipe Jual — pilih dari stok
+  motorId: '',
+  // Untuk tipe Beli — input manual
   motorMerk: '',
   motorTipe: '',
   motorWarna: '',
@@ -35,6 +38,17 @@ function TransactionPage() {
     },
   });
 
+  // Fetch motors untuk dropdown Jual
+  const { data: motors = [] } = useQuery({
+    queryKey: ['motors', 'transaction-options'],
+    queryFn: async () => {
+      const response = await apiClient.get('/motors?limit=200');
+      return response?.data?.motors ?? [];
+    },
+  });
+
+  const availableMotors = motors.filter((m) => m.status === 'Tersedia');
+
   const createMutation = useMutation({
     mutationFn: async (payload) => apiClient.post('/transactions', payload),
     onSuccess: async () => {
@@ -61,21 +75,72 @@ function TransactionPage() {
   });
 
   const getMotorDisplay = (trx) => {
-    const parts = [trx.motorMerk, trx.motorTipe].filter(Boolean);
-    if (parts.length === 0) return trx.motorId || '-';
-    let label = parts.join(' ');
-    if (trx.motorWarna) label += ` - ${trx.motorWarna}`;
-    if (trx.motorTahun) label += ` (${trx.motorTahun})`;
-    return label;
+    // Prioritas: field manual > lookup dari motors
+    if (trx.motorMerk && trx.motorTipe) {
+      let label = `${trx.motorMerk} ${trx.motorTipe}`;
+      if (trx.motorTahun) label += ` (${trx.motorTahun})`;
+      return label;
+    }
+    if (trx.motorId) {
+      const motor = motors.find((m) => m.id === trx.motorId);
+      if (motor) {
+        let label = `${motor.merk} ${motor.tipe}`;
+        if (motor.tahun) label += ` (${motor.tahun})`;
+        return label;
+      }
+      return trx.motorId;
+    }
+    return '-';
+  };
+
+  const getMotorWarna = (trx) => {
+    if (trx.motorWarna) return trx.motorWarna;
+    if (trx.motorId) {
+      const motor = motors.find((m) => m.id === trx.motorId);
+      return motor?.warna || null;
+    }
+    return null;
+  };
+
+  // Saat pilih motor dari dropdown (tipe Jual), auto-fill semua detail + harga
+  const handleSelectMotor = (motorId) => {
+    const motor = motors.find((m) => m.id === motorId);
+    if (motor) {
+      setForm((prev) => ({
+        ...prev,
+        motorId,
+        motorMerk: motor.merk || '',
+        motorTipe: motor.tipe || '',
+        motorWarna: motor.warna || '',
+        motorTahun: motor.tahun ? String(motor.tahun) : '',
+        amount: motor.harga ? String(motor.harga) : prev.amount,
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        motorId,
+        motorMerk: '',
+        motorTipe: '',
+        motorWarna: '',
+        motorTahun: '',
+      }));
+    }
   };
 
   const handleAdd = async () => {
     const errors = {};
     if (!form.date) errors.date = 'Tanggal wajib diisi';
-    if (!form.clientName.trim()) errors.clientName = form.type === 'Jual' ? 'Nama pembeli wajib diisi' : 'Nama penjual wajib diisi';
-    if (!form.motorMerk.trim()) errors.motorMerk = 'Merk motor wajib diisi';
-    if (!form.motorTipe.trim()) errors.motorTipe = 'Tipe motor wajib diisi';
+    if (!form.clientName.trim()) {
+      errors.clientName = form.type === 'Jual' ? 'Nama pembeli wajib diisi' : 'Nama penjual wajib diisi';
+    }
     if (!form.amount) errors.amount = 'Nominal wajib diisi';
+
+    if (form.type === 'Jual') {
+      if (!form.motorId) errors.motorId = 'Pilih motor dari stok';
+    } else {
+      if (!form.motorMerk.trim()) errors.motorMerk = 'Merk motor wajib diisi';
+      if (!form.motorTipe.trim()) errors.motorTipe = 'Tipe motor wajib diisi';
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -88,8 +153,9 @@ function TransactionPage() {
       date: form.date,
       clientName: form.clientName.trim(),
       clientWa: form.clientWa.trim() || null,
-      motorMerk: form.motorMerk.trim(),
-      motorTipe: form.motorTipe.trim(),
+      motorId: form.type === 'Jual' ? form.motorId : null,
+      motorMerk: form.motorMerk.trim() || null,
+      motorTipe: form.motorTipe.trim() || null,
       motorWarna: form.motorWarna.trim() || null,
       motorTahun: form.motorTahun ? Number(form.motorTahun) : null,
       amount: Number(form.amount),
@@ -192,12 +258,10 @@ function TransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-slate-300">{trx.date}</td>
                       <td className="px-6 py-4 text-white font-medium">{trx.clientName}</td>
+                      <td className="px-6 py-4 text-slate-300">{getMotorDisplay(trx)}</td>
                       <td className="px-6 py-4 text-slate-300">
-                        {trx.motorMerk && trx.motorTipe
-                          ? `${trx.motorMerk} ${trx.motorTipe}${trx.motorTahun ? ` (${trx.motorTahun})` : ''}`
-                          : trx.motorId || '-'}
+                        {getMotorWarna(trx) || <span className="text-slate-600 italic text-xs">—</span>}
                       </td>
-                      <td className="px-6 py-4 text-slate-300">{trx.motorWarna || <span className="text-slate-600 italic text-xs">—</span>}</td>
                       <td className="px-6 py-4 text-orange-400 font-bold">{formatRp(trx.amount)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
@@ -250,7 +314,11 @@ function TransactionPage() {
                     <button
                       key={type}
                       type="button"
-                      onClick={() => setForm((previous) => ({ ...previous, type }))}
+                      onClick={() => setForm((prev) => ({
+                        ...createEmptyForm(),
+                        type,
+                        date: prev.date,
+                      }))}
                       className={`cursor-pointer flex-1 py-3 rounded-xl font-bold text-sm transition-all ${
                         form.type === type
                           ? type === 'Jual'
@@ -272,7 +340,7 @@ function TransactionPage() {
                   className={inputClass}
                   type="date"
                   value={form.date}
-                  onChange={(event) => setForm((previous) => ({ ...previous, date: event.target.value }))}
+                  onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))}
                 />
               </div>
 
@@ -285,7 +353,7 @@ function TransactionPage() {
                   className={`${inputClass}${formErrors.clientName ? ' border-red-500' : ''}`}
                   placeholder={form.type === 'Jual' ? 'Nama lengkap pembeli...' : 'Nama lengkap penjual...'}
                   value={form.clientName}
-                  onChange={(event) => setForm((previous) => ({ ...previous, clientName: event.target.value }))}
+                  onChange={(event) => setForm((prev) => ({ ...prev, clientName: event.target.value }))}
                 />
                 {formErrors.clientName && <p className="text-xs text-red-400 mt-1">{formErrors.clientName}</p>}
               </div>
@@ -297,46 +365,100 @@ function TransactionPage() {
                   className={inputClass}
                   placeholder="08xxxxxxxxxx"
                   value={form.clientWa}
-                  onChange={(event) => setForm((previous) => ({ ...previous, clientWa: event.target.value }))}
+                  onChange={(event) => setForm((prev) => ({ ...prev, clientWa: event.target.value }))}
                 />
               </div>
 
-              {/* === Detail Motor — semua input manual === */}
+              {/* === MOTOR SECTION === */}
               <div className="border-t border-white/10 pt-4 mt-2">
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Detail Motor</p>
-                <div className="space-y-3">
-                  <div>
-                    <input
-                      className={`${inputClass}${formErrors.motorMerk ? ' border-red-500' : ''}`}
-                      placeholder="Merk (Honda, Yamaha, Suzuki...)"
-                      value={form.motorMerk}
-                      onChange={(e) => setForm((prev) => ({ ...prev, motorMerk: e.target.value }))}
-                    />
-                    {formErrors.motorMerk && <p className="text-xs text-red-400 mt-1">{formErrors.motorMerk}</p>}
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
+                  {form.type === 'Jual' ? 'Pilih Motor dari Stok' : 'Detail Motor'}
+                </p>
+
+                {form.type === 'Jual' ? (
+                  /* ===== JUAL: Dropdown dari stok ===== */
+                  <div className="space-y-3">
+                    <select
+                      className={`${inputClass}${formErrors.motorId ? ' border-red-500' : ''}`}
+                      value={form.motorId}
+                      onChange={(e) => handleSelectMotor(e.target.value)}
+                    >
+                      <option value="">-- Pilih motor dari katalog --</option>
+                      {availableMotors.map((motor) => (
+                        <option key={motor.id} value={motor.id}>
+                          {motor.merk} {motor.tipe} {motor.tahun}{motor.warna ? ` - ${motor.warna}` : ''} • {formatRp(motor.harga)} ({motor.id})
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.motorId && <p className="text-xs text-red-400 mt-1">{formErrors.motorId}</p>}
+                    {availableMotors.length === 0 && (
+                      <p className="text-xs text-yellow-400">⚠️ Tidak ada motor tersedia di stok.</p>
+                    )}
+
+                    {/* Preview motor yang dipilih */}
+                    {form.motorId && (
+                      <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4 space-y-2">
+                        <p className="text-xs text-green-400 font-bold uppercase tracking-widest">Motor Terpilih</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-slate-500 text-xs">Merk</span>
+                            <p className="text-white font-medium">{form.motorMerk || '-'}</p>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 text-xs">Tipe</span>
+                            <p className="text-white font-medium">{form.motorTipe || '-'}</p>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 text-xs">Warna</span>
+                            <p className="text-white font-medium">{form.motorWarna || '-'}</p>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 text-xs">Tahun</span>
+                            <p className="text-white font-medium">{form.motorTahun || '-'}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">
+                          ⚡ Motor ini akan otomatis dihapus dari katalog setelah transaksi disimpan.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div>
+                ) : (
+                  /* ===== BELI: Input manual ===== */
+                  <div className="space-y-3">
+                    <div>
+                      <input
+                        className={`${inputClass}${formErrors.motorMerk ? ' border-red-500' : ''}`}
+                        placeholder="Merk (Honda, Yamaha, Suzuki...)"
+                        value={form.motorMerk}
+                        onChange={(e) => setForm((prev) => ({ ...prev, motorMerk: e.target.value }))}
+                      />
+                      {formErrors.motorMerk && <p className="text-xs text-red-400 mt-1">{formErrors.motorMerk}</p>}
+                    </div>
+                    <div>
+                      <input
+                        className={`${inputClass}${formErrors.motorTipe ? ' border-red-500' : ''}`}
+                        placeholder="Tipe (Beat, Vario 125, CBR 250RR...)"
+                        value={form.motorTipe}
+                        onChange={(e) => setForm((prev) => ({ ...prev, motorTipe: e.target.value }))}
+                      />
+                      {formErrors.motorTipe && <p className="text-xs text-red-400 mt-1">{formErrors.motorTipe}</p>}
+                    </div>
                     <input
-                      className={`${inputClass}${formErrors.motorTipe ? ' border-red-500' : ''}`}
-                      placeholder="Tipe (Beat, Vario 125, CBR 250RR...)"
-                      value={form.motorTipe}
-                      onChange={(e) => setForm((prev) => ({ ...prev, motorTipe: e.target.value }))}
+                      className={inputClass}
+                      placeholder="Warna (Merah, Hitam, Putih...)"
+                      value={form.motorWarna}
+                      onChange={(e) => setForm((prev) => ({ ...prev, motorWarna: e.target.value }))}
                     />
-                    {formErrors.motorTipe && <p className="text-xs text-red-400 mt-1">{formErrors.motorTipe}</p>}
+                    <input
+                      className={inputClass}
+                      type="number"
+                      placeholder="Tahun (2020)"
+                      value={form.motorTahun}
+                      onChange={(e) => setForm((prev) => ({ ...prev, motorTahun: e.target.value }))}
+                    />
                   </div>
-                  <input
-                    className={inputClass}
-                    placeholder="Warna (Merah, Hitam, Putih...)"
-                    value={form.motorWarna}
-                    onChange={(e) => setForm((prev) => ({ ...prev, motorWarna: e.target.value }))}
-                  />
-                  <input
-                    className={inputClass}
-                    type="number"
-                    placeholder="Tahun (2020)"
-                    value={form.motorTahun}
-                    onChange={(e) => setForm((prev) => ({ ...prev, motorTahun: e.target.value }))}
-                  />
-                </div>
+                )}
               </div>
 
               {/* Nominal */}
@@ -349,7 +471,7 @@ function TransactionPage() {
                   type="number"
                   placeholder="50000000"
                   value={form.amount}
-                  onChange={(event) => setForm((previous) => ({ ...previous, amount: event.target.value }))}
+                  onChange={(event) => setForm((prev) => ({ ...prev, amount: event.target.value }))}
                 />
                 {formErrors.amount && <p className="text-xs text-red-400 mt-1">{formErrors.amount}</p>}
               </div>
@@ -361,7 +483,7 @@ function TransactionPage() {
                   className={`${inputClass} min-h-24 resize-none`}
                   placeholder="Opsional"
                   value={form.notes}
-                  onChange={(event) => setForm((previous) => ({ ...previous, notes: event.target.value }))}
+                  onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
                 />
               </div>
             </div>
