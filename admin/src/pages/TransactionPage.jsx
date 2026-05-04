@@ -203,7 +203,7 @@ function TransactionPage() {
           }
           @page {
             margin: 10mm;
-            size: A4;
+            size: A4 landscape;
           }
         }
       `}</style>
