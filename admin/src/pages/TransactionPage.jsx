@@ -15,6 +15,7 @@ const createEmptyForm = () => ({
   motorTipe: '',
   motorWarna: '',
   motorTahun: '',
+  motorNopol: '',
   amount: '',
   notes: '',
 });
@@ -113,6 +114,7 @@ function TransactionPage() {
         motorTipe: motor.tipe || '',
         motorWarna: motor.warna || '',
         motorTahun: motor.tahun ? String(motor.tahun) : '',
+        motorNopol: motor.nopol || '',
         amount: motor.harga ? String(motor.harga) : prev.amount,
       }));
     } else {
@@ -123,6 +125,7 @@ function TransactionPage() {
         motorTipe: '',
         motorWarna: '',
         motorTahun: '',
+        motorNopol: '',
       }));
     }
   };
@@ -158,6 +161,7 @@ function TransactionPage() {
       motorTipe: form.motorTipe.trim() || null,
       motorWarna: form.motorWarna.trim() || null,
       motorTahun: form.motorTahun ? Number(form.motorTahun) : null,
+      motorNopol: form.motorNopol.trim() || null,
       amount: Number(form.amount),
       notes: form.notes.trim() || null,
     });
@@ -238,7 +242,7 @@ function TransactionPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-900/50 border-b border-white/5">
-                  {['ID', 'Tipe', 'Tanggal', 'Klien', 'Motor', 'Warna', 'Nominal', 'Aksi'].map((heading) => (
+                  {['ID', 'Tipe', 'Tanggal', 'Klien', 'Motor', 'Warna', 'Nopol', 'Nominal', 'Aksi'].map((heading) => (
                     <th
                       key={heading}
                       className={`px-6 py-4 text-slate-400 font-bold uppercase tracking-widest text-xs ${
@@ -253,7 +257,7 @@ function TransactionPage() {
               <tbody className="divide-y divide-white/5">
                 {isLoading && (
                   <tr>
-                    <td colSpan={8} className="text-center py-12 text-slate-500">
+                    <td colSpan={9} className="text-center py-12 text-slate-500">
                       Memuat transaksi...
                     </td>
                   </tr>
@@ -261,7 +265,7 @@ function TransactionPage() {
 
                 {!isLoading && transactions.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-center py-12 text-slate-500">
+                    <td colSpan={9} className="text-center py-12 text-slate-500">
                       Belum ada transaksi.
                     </td>
                   </tr>
@@ -286,6 +290,9 @@ function TransactionPage() {
                       <td className="px-6 py-4 text-slate-300">
                         {getMotorWarna(trx) || <span className="text-slate-600 italic text-xs">—</span>}
                       </td>
+                      <td className="px-6 py-4 text-slate-300 font-mono text-xs">
+                        {trx.motorNopol || <span className="text-slate-600 italic text-xs">—</span>}
+                      </td>
                       <td className="px-6 py-4 text-orange-400 font-bold">{formatRp(trx.amount)}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
@@ -297,6 +304,7 @@ function TransactionPage() {
                                 date: trx.date,
                                 client: trx.clientName,
                                 motor: getMotorDisplay(trx),
+                                nopol: trx.motorNopol || '',
                                 amount: trx.amount,
                               })
                             }
@@ -440,6 +448,10 @@ function TransactionPage() {
                             <span className="text-slate-500 text-xs">Tahun</span>
                             <p className="text-white font-medium">{form.motorTahun || '-'}</p>
                           </div>
+                          <div>
+                            <span className="text-slate-500 text-xs">Nopol</span>
+                            <p className="text-white font-medium font-mono">{form.motorNopol || '-'}</p>
+                          </div>
                         </div>
                         <p className="text-xs text-slate-500 mt-2">
                           ⚡ Motor ini akan otomatis dihapus dari katalog setelah transaksi disimpan.
@@ -480,6 +492,13 @@ function TransactionPage() {
                       placeholder="Tahun (2020)"
                       value={form.motorTahun}
                       onChange={(e) => setForm((prev) => ({ ...prev, motorTahun: e.target.value }))}
+                    />
+                    <input
+                      className={inputClass}
+                      placeholder="Nopol (AG 1234 XX)"
+                      value={form.motorNopol}
+                      onChange={(e) => setForm((prev) => ({ ...prev, motorNopol: e.target.value.toUpperCase() }))}
+                      style={{ textTransform: 'uppercase' }}
                     />
                   </div>
                 )}

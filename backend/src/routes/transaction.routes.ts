@@ -47,6 +47,7 @@ router.post('/', requireAdmin, async (req, res, next) => {
       motorTipe: req.body?.motorTipe || null,
       motorWarna: req.body?.motorWarna || null,
       motorTahun: req.body?.motorTahun ? Number(req.body.motorTahun) : null,
+      motorNopol: req.body?.motorNopol || null,
       clientName: req.body?.clientName,
       clientWa: req.body?.clientWa || null,
       amount: Number(req.body?.amount || 0),

@@ -10,6 +10,7 @@ export const transactions = pgTable("transactions", {
   motorTipe: varchar("motor_tipe", { length: 100 }),
   motorWarna: varchar("motor_warna", { length: 100 }),
   motorTahun: integer("motor_tahun"),
+  motorNopol: varchar("motor_nopol", { length: 20 }),
   clientName: text("client_name").notNull(),
   clientWa: text("client_wa"),
   amount: bigint("amount", { mode: "number" }).notNull(),
