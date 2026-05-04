@@ -175,8 +175,32 @@ function TransactionPage() {
     <>
       <style>{`
         @media print {
-          body > *:not(#receipt-print) { display: none !important; }
-          #receipt-print { display: block !important; }
+          /* Hide everything */
+          body * {
+            visibility: hidden !important;
+          }
+          /* Show only receipt */
+          #receipt-print,
+          #receipt-print * {
+            visibility: visible !important;
+          }
+          #receipt-print {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            z-index: 99999 !important;
+            background: #fff !important;
+          }
+          /* Hide scrollbars, nav, sidebar */
+          nav, aside, header, footer {
+            display: none !important;
+          }
+          @page {
+            margin: 10mm;
+            size: A4;
+          }
         }
       `}</style>
 
