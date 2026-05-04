@@ -7,6 +7,7 @@ export const motors = pgTable(
     merk: varchar("merk", { length: 100 }).notNull(),
     tipe: varchar("tipe", { length: 100 }).notNull(),
     warna: varchar("warna", { length: 100 }), // Warna motor
+    nopol: varchar("nopol", { length: 20 }), // Nomor polisi
     tahun: integer("tahun").notNull(),
     harga: bigint("harga", { mode: "number" }).notNull(),
     kilometer: integer("kilometer"), // NEW FIELD

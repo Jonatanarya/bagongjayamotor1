@@ -9,6 +9,7 @@ const emptyForm = {
   merk: '',
   tipe: '',
   warna: '',
+  nopol: '',
   tahun: '',
   harga: '',
   kilometer: '',
@@ -108,6 +109,7 @@ function StockPage() {
       merk: item.merk ?? '',
       tipe: item.tipe ?? '',
       warna: item.warna ?? '',
+      nopol: item.nopol ?? '',
       tahun: String(item.tahun ?? ''),
       harga: String(item.harga ?? ''),
       kilometer: String(item.kilometer ?? ''),
@@ -184,6 +186,7 @@ function StockPage() {
       merk: form.merk.trim(),
       tipe: form.tipe.trim(),
       warna: form.warna.trim() || null,
+      nopol: form.nopol.trim() || null,
       tahun: Number(form.tahun),
       harga: parseNumber(form.harga),
       kilometer: form.kilometer ? Number(form.kilometer) : null,
@@ -255,7 +258,7 @@ function StockPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-900/50 border-b border-white/5">
-                  {['ID', 'Motor', 'Warna', 'Tahun', 'Harga', 'Kilometer', 'Status', 'Aksi'].map((heading) => (
+                  {['ID', 'Motor', 'Warna', 'Nopol', 'Tahun', 'Harga', 'Kilometer', 'Status', 'Aksi'].map((heading) => (
                     <th
                       key={heading}
                       className={`px-6 py-4 text-slate-400 font-bold uppercase tracking-widest text-xs ${
@@ -270,7 +273,7 @@ function StockPage() {
               <tbody className="divide-y divide-white/5">
                 {isLoading && (
                   <tr>
-                    <td colSpan={7} className="text-center py-12 text-slate-500">
+                    <td colSpan={9} className="text-center py-12 text-slate-500">
                       Memuat data stok...
                     </td>
                   </tr>
@@ -278,7 +281,7 @@ function StockPage() {
 
                 {!isLoading && motors.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center py-12 text-slate-500">
+                    <td colSpan={9} className="text-center py-12 text-slate-500">
                       Tidak ada motor ditemukan
                     </td>
                   </tr>
@@ -303,6 +306,7 @@ function StockPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-slate-300">{item.warna || <span className="text-slate-600 italic text-xs">—</span>}</td>
+                      <td className="px-6 py-4 text-slate-300">{item.nopol || <span className="text-slate-600 italic text-xs">—</span>}</td>
                       <td className="px-6 py-4 text-slate-300">{item.tahun}</td>
                       <td className="px-6 py-4 text-orange-400 font-bold">{formatRp(item.harga)}</td>
                       <td className="px-6 py-4 text-slate-300">{item.kilometer ?? 0} km</td>
@@ -358,6 +362,7 @@ function StockPage() {
                 { label: 'Merk', name: 'merk', placeholder: 'Honda, Yamaha...' },
                 { label: 'Tipe', name: 'tipe', placeholder: 'CBR 250RR...' },
                 { label: 'Warna', name: 'warna', placeholder: 'Merah, Hitam, Putih...' },
+                { label: 'Nopol', name: 'nopol', placeholder: 'AB 1234 CD' },
                 { label: 'Tahun', name: 'tahun', placeholder: '2022', type: 'number' },
                 { label: 'Harga', name: 'harga', placeholder: '58000000', type: 'number' },
                 { label: 'Kilometer', name: 'kilometer', placeholder: '5000', type: 'number' },
