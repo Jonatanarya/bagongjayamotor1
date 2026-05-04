@@ -7,157 +7,223 @@ const ReceiptTemplate = React.forwardRef(({ transaction }, ref) => {
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString('id-ID', {
-    year: 'numeric',
+    day: 'numeric',
     month: 'long',
-    day: 'numeric'
+    year: 'numeric',
   });
+
+  const terbilang = numberToWords(Number(transaction.amount || 0));
+
+  // Tentukan label berdasarkan tipe transaksi
+  const isJual = transaction.type === 'Jual';
+  const untukText = isJual
+    ? `Pembelian motor ${transaction.motor || ''}${transaction.nopol ? ' Nopol ' + transaction.nopol : ''}`
+    : `Penjualan motor ${transaction.motor || ''}${transaction.nopol ? ' Nopol ' + transaction.nopol : ''}`;
 
   return (
     <div
       ref={ref}
       style={{
-        fontFamily: 'Times New Roman, serif',
-        padding: '60px 40px',
-        maxWidth: '600px',
+        fontFamily: "'Segoe UI', Arial, sans-serif",
+        width: '800px',
+        minHeight: '500px',
         margin: '0 auto',
-        color: '#000',
-        backgroundColor: '#fff',
-        minHeight: '100vh',
-        boxSizing: 'border-box'
+        padding: '0',
+        color: '#1a1a2e',
+        backgroundColor: '#f5f0e8',
+        boxSizing: 'border-box',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      {/* Header */}
+      {/* ===== HEADER ===== */}
       <div
         style={{
           textAlign: 'center',
-          borderBottom: '3px solid #000',
-          paddingBottom: '20px',
-          marginBottom: '30px'
+          padding: '30px 40px 20px 40px',
         }}
       >
-        <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0', letterSpacing: '2px' }}>
-          KWITANSI
+        <h1
+          style={{
+            fontSize: '32px',
+            fontWeight: '800',
+            margin: '0',
+            color: '#1a1a4e',
+            letterSpacing: '3px',
+            fontFamily: "'Georgia', 'Times New Roman', serif",
+          }}
+        >
+          KWITANSI PEMBAYARAN
         </h1>
-        <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 4px 0' }}>
-          BAGONG JAYA MOTOR
+        <h2
+          style={{
+            fontSize: '28px',
+            fontWeight: '800',
+            margin: '4px 0 0 0',
+            color: '#1a1a4e',
+            letterSpacing: '2px',
+            fontFamily: "'Georgia', 'Times New Roman', serif",
+          }}
+        >
+          UD BAGONG JAYA MOTOR
         </h2>
-        <p style={{ fontSize: '13px', margin: '4px 0', color: '#333' }}>
-          Jl. Raya Merdeka No. 123, Kota Bandung 40123
-        </p>
-        <p style={{ fontSize: '12px', margin: '2px 0', color: '#666' }}>
-          Telepon: (022) 123-4567 | Email: info@bagongjayadmotor.com
-        </p>
       </div>
 
-      {/* Receipt Details */}
-      <div style={{ marginBottom: '30px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr>
-              <td style={{ width: '35%', padding: '8px 0', fontSize: '14px', fontWeight: '500' }}>No. Kwitansi</td>
-              <td style={{ padding: '8px 0', fontSize: '14px' }}>: <span style={{ fontWeight: 'bold' }}>{transaction.id}</span></td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px 0', fontSize: '14px', fontWeight: '500' }}>Tanggal</td>
-              <td style={{ padding: '8px 0', fontSize: '14px' }}>: {transaction.date}</td>
-            </tr>
-            <tr style={{ borderTop: '1px solid #ddd', marginTop: '10px' }}>
-              <td style={{ padding: '12px 0 8px 0', fontSize: '14px', fontWeight: '500' }}>Nama Klien</td>
-              <td style={{ padding: '12px 0 8px 0', fontSize: '14px' }}>: <span style={{ fontWeight: 'bold' }}>{transaction.client}</span></td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px 0', fontSize: '14px', fontWeight: '500' }}>Motor</td>
-              <td style={{ padding: '8px 0', fontSize: '14px' }}>: {transaction.motor}</td>
-            </tr>
-            <tr>
-              <td style={{ padding: '8px 0', fontSize: '14px', fontWeight: '500' }}>Keperluan</td>
-              <td style={{ padding: '8px 0', fontSize: '14px' }}>: Transaksi {transaction.type === 'Jual' ? 'Penjualan' : 'Pembelian'}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Amount Section */}
+      {/* ===== BODY ===== */}
       <div
         style={{
-          backgroundColor: '#f5f5f5',
-          border: '2px solid #000',
-          padding: '20px',
-          marginBottom: '30px',
-          borderRadius: '4px'
+          display: 'flex',
+          padding: '10px 40px 20px 40px',
+          gap: '30px',
         }}
       >
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr>
-              <td style={{ padding: '8px 0', fontSize: '14px', fontWeight: '500' }}>Jumlah Uang</td>
-              <td style={{ padding: '8px 0', fontSize: '14px', textAlign: 'right' }}>
-                <span style={{ fontWeight: 'bold', fontSize: '16px' }}>
-                  {formatRp(transaction.amount)}
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td style={{ padding: '12px 0 8px 0', fontSize: '12px', fontStyle: 'italic' }} colSpan="2">
-                Terbilang: {numberToWords(transaction.amount)} Rupiah
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* LEFT — Form Fields */}
+        <div style={{ flex: '1', minWidth: '0' }}>
+          {/* Telah diterima dari */}
+          <div style={{ marginBottom: '16px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '700' }}>Telah diterima dari</span>
+            <div
+              style={{
+                borderBottom: '2px solid #1a1a4e',
+                paddingBottom: '4px',
+                marginTop: '6px',
+                fontSize: '15px',
+                fontWeight: '500',
+                minHeight: '22px',
+              }}
+            >
+              {transaction.client || ''}
+            </div>
+          </div>
+
+          {/* Uang sejumlah */}
+          <div style={{ marginBottom: '16px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '700' }}>Uang sejumlah</span>
+            <div
+              style={{
+                borderBottom: '2px solid #1a1a4e',
+                paddingBottom: '4px',
+                marginTop: '6px',
+                fontSize: '15px',
+                fontWeight: '600',
+                minHeight: '22px',
+              }}
+            >
+              {formatRp(transaction.amount)}{' '}
+              <span style={{ fontSize: '12px', fontWeight: '400', fontStyle: 'italic', color: '#555' }}>
+                ({terbilang} rupiah)
+              </span>
+            </div>
+          </div>
+
+          {/* Untuk */}
+          <div style={{ marginBottom: '20px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '700' }}>Untuk</span>
+            <div
+              style={{
+                borderBottom: '2px solid #1a1a4e',
+                paddingBottom: '4px',
+                marginTop: '6px',
+                fontSize: '15px',
+                fontWeight: '500',
+                minHeight: '22px',
+              }}
+            >
+              {untukText}
+            </div>
+          </div>
+
+          {/* Motor Image Placeholder */}
+          <div style={{ marginTop: '20px' }}>
+            <img
+              src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=400&q=80"
+              alt="Motor"
+              style={{
+                width: '200px',
+                height: 'auto',
+                opacity: '0.3',
+                filter: 'grayscale(100%)',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT — Info & No */}
+        <div style={{ width: '220px', flexShrink: '0' }}>
+          {/* Alamat */}
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ fontSize: '14px', fontWeight: '800', margin: '0 0 4px 0', color: '#1a1a4e' }}>Alamat</p>
+            <p style={{ fontSize: '13px', margin: '0', lineHeight: '1.5', color: '#333' }}>
+              Jl. Jaka Muda RT 001 RW 005
+              <br />
+              Desa Kaliboto Tarokan
+              <br />
+              Kediri
+            </p>
+          </div>
+
+          {/* Telepon */}
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ fontSize: '14px', fontWeight: '800', margin: '0 0 4px 0', color: '#1a1a4e' }}>Telepon</p>
+            <p style={{ fontSize: '14px', margin: '0', fontWeight: '600' }}>088989010342</p>
+          </div>
+
+          {/* No Kwitansi */}
+          <div
+            style={{
+              border: '2px solid #1a1a4e',
+              padding: '12px 16px',
+              borderRadius: '4px',
+              marginTop: '10px',
+            }}
+          >
+            <p style={{ fontSize: '14px', fontWeight: '800', margin: '0 0 4px 0', color: '#1a1a4e' }}>No:</p>
+            <p style={{ fontSize: '16px', fontWeight: '700', margin: '0', color: '#1a1a4e', letterSpacing: '1px' }}>
+              {transaction.id || '-'}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Additional Info */}
-      <div style={{ marginBottom: '40px', fontSize: '12px', color: '#666', lineHeight: '1.6' }}>
-        <p style={{ margin: '0 0 6px 0' }}>
-          <strong>Keterangan:</strong> Pembayaran telah diterima dengan baik untuk transaksi motor-motor pilihan berkualitas tinggi.
-        </p>
-        <p style={{ margin: '0' }}>
-          Terima kasih atas kepercayaan Anda kepada Bagong Jaya Motor.
-        </p>
-      </div>
-
-      {/* Signature Section */}
+      {/* ===== FOOTER — Tanda Tangan ===== */}
       <div
         style={{
-          marginTop: '50px',
           display: 'flex',
           justifyContent: 'space-between',
-          paddingTop: '20px'
+          padding: '10px 40px 30px 40px',
+          marginTop: '10px',
         }}
       >
-        <div style={{ textAlign: 'center', width: '45%' }}>
-          <p style={{ fontSize: '13px', margin: '0 0 60px 0', fontWeight: '500' }}>Penerima,</p>
-          <p style={{ fontSize: '13px', margin: '0', borderTop: '1px solid #000', paddingTop: '4px', fontStyle: 'italic' }}>
-            (_______________)
+        {/* Terima kasih */}
+        <div style={{ textAlign: 'center', width: '200px' }}>
+          <p style={{ fontSize: '14px', fontStyle: 'italic', margin: '0 0 60px 0', color: '#555' }}>
+            Terima kasih
           </p>
+          <div style={{ borderTop: '1px solid #1a1a4e', paddingTop: '6px' }}>
+            <p style={{ fontSize: '12px', margin: '0', fontStyle: 'italic', color: '#888' }}>(Penerima)</p>
+          </div>
         </div>
 
-        <div style={{ textAlign: 'center', width: '45%' }}>
-          <p style={{ fontSize: '13px', margin: '0 0 10px 0' }}>Bandung, {formattedDate}</p>
-          <p style={{ fontSize: '13px', margin: '0 0 60px 0', fontWeight: '500' }}>Untuk Bagong Jaya Motor,</p>
-          <p style={{ fontSize: '13px', margin: '0', borderTop: '1px solid #000', paddingTop: '4px' }}>
-            <strong>Admin</strong>
-          </p>
+        {/* Tempat, Tanggal & TTD */}
+        <div style={{ textAlign: 'center', width: '200px' }}>
+          <p style={{ fontSize: '13px', margin: '0 0 60px 0', color: '#333' }}>Kediri, {formattedDate}</p>
+          <div style={{ borderTop: '1px solid #1a1a4e', paddingTop: '6px' }}>
+            <p style={{ fontSize: '12px', margin: '0', fontWeight: '600' }}>UD Bagong Jaya Motor</p>
+          </div>
         </div>
       </div>
 
-      {/* Footer */}
+      {/* ===== FOOTER NOTE ===== */}
       <div
         style={{
-          marginTop: '60px',
-          paddingTop: '20px',
           borderTop: '1px solid #ccc',
+          padding: '10px 40px',
           textAlign: 'center',
-          fontSize: '11px',
-          color: '#999'
+          fontSize: '10px',
+          color: '#aaa',
         }}
       >
-        <p style={{ margin: '0' }}>
-          Dokumen ini telah dibuat oleh sistem manajemen Bagong Jaya Motor
-        </p>
-        <p style={{ margin: '4px 0 0 0' }}>
-          Print Date: {today.toLocaleString('id-ID')}
-        </p>
+        Dicetak: {today.toLocaleString('id-ID')}
       </div>
     </div>
   );
@@ -167,22 +233,28 @@ ReceiptTemplate.displayName = 'ReceiptTemplate';
 
 // Function to convert number to Indonesian words
 function numberToWords(num) {
+  if (!num || num === 0) return 'nol';
+
   const ones = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
   const teens = ['sepuluh', 'sebelas', 'dua belas', 'tiga belas', 'empat belas', 'lima belas', 'enam belas', 'tujuh belas', 'delapan belas', 'sembilan belas'];
   const tens = ['', '', 'dua puluh', 'tiga puluh', 'empat puluh', 'lima puluh', 'enam puluh', 'tujuh puluh', 'delapan puluh', 'sembilan puluh'];
   const scales = ['', 'ribu', 'juta', 'miliar', 'triliun'];
 
-  if (num === 0) return 'nol';
-
   let result = '';
   let scaleIndex = 0;
+  let n = Math.abs(Math.floor(num));
 
-  while (num > 0) {
-    let groupValue = num % 1000;
+  while (n > 0) {
+    let groupValue = n % 1000;
     if (groupValue > 0) {
-      result = convertGroup(groupValue, ones, teens, tens) + (scales[scaleIndex] ? ' ' + scales[scaleIndex] : '') + ' ' + result;
+      // Special case: "seribu" bukan "satu ribu"
+      if (groupValue === 1 && scaleIndex === 1) {
+        result = 'seribu ' + result;
+      } else {
+        result = convertGroup(groupValue, ones, teens, tens) + (scales[scaleIndex] ? ' ' + scales[scaleIndex] : '') + ' ' + result;
+      }
     }
-    num = Math.floor(num / 1000);
+    n = Math.floor(n / 1000);
     scaleIndex++;
   }
 
@@ -193,7 +265,11 @@ function convertGroup(num, ones, teens, tens) {
   let result = '';
 
   if (num >= 100) {
-    result += ones[Math.floor(num / 100)] + ' ratus ';
+    if (Math.floor(num / 100) === 1) {
+      result += 'seratus ';
+    } else {
+      result += ones[Math.floor(num / 100)] + ' ratus ';
+    }
     num %= 100;
   }
 
