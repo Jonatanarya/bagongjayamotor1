@@ -26,7 +26,7 @@ function mapMotor(motor) {
 function MotorCard({ motor }) {
   const openWhatsApp = () => {
     const message = encodeURIComponent(`Halo, saya tertarik dengan ${motor.name}. Apakah unit ini masih tersedia?`);
-    window.open(`https://wa.me/?text=${message}`, '_blank');
+    window.open(`https://wa.me/6288989010342?text=${message}`, '_blank');
   };
 
   return (

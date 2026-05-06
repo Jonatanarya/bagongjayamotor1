@@ -515,7 +515,7 @@ function CatalogPage() {
                       <button
                         onClick={() =>
                           window.open(
-                            `https://wa.me/?text=${encodeURIComponent(
+                            `https://wa.me/6288989010342?text=${encodeURIComponent(
                               `Halo, saya tertarik dengan ${motor.merk} ${motor.tipe}`,
                             )}`,
                             '_blank',
