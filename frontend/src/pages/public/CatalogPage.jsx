@@ -516,7 +516,7 @@ function CatalogPage() {
                         onClick={() =>
                           window.open(
                             `https://wa.me/6288989010342?text=${encodeURIComponent(
-                              `Halo, saya tertarik dengan ${motor.merk} ${motor.tipe}`,
+                              `Halo, saya tertarik dengan ${motor.merk} ${motor.tipe} tahun ${motor.tahun}${motor.warna ? ` warna ${motor.warna}` : ''}. Apakah unit ini masih tersedia?`,
                             )}`,
                             '_blank',
                           )

@@ -13,6 +13,7 @@ function mapMotor(motor) {
     img: motor.imageUrl || fallbackImage,
     name: `${motor.merk} ${motor.tipe}`,
     year: String(motor.tahun),
+    warna: motor.warna || '',
     km: Number(motor.kilometer || 0).toLocaleString('id-ID'),
     price: formatPrice(motor.harga),
     specs: [
@@ -25,7 +26,7 @@ function mapMotor(motor) {
 
 function MotorCard({ motor }) {
   const openWhatsApp = () => {
-    const message = encodeURIComponent(`Halo, saya tertarik dengan ${motor.name}. Apakah unit ini masih tersedia?`);
+    const message = encodeURIComponent(`Halo, saya tertarik dengan ${motor.name} tahun ${motor.year}${motor.warna ? ` warna ${motor.warna}` : ''}. Apakah unit ini masih tersedia?`);
     window.open(`https://wa.me/6288989010342?text=${message}`, '_blank');
   };
 
